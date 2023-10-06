@@ -3,15 +3,13 @@ cmake_minimum_required(VERSION 3.27)
 # List all files containing tests. (Change as needed)
 set(TESTFILES        # All .cpp files in tests/
     main.cpp
-    dummy.cpp
-    dummy2.cpp
+    test_unique_ptr.cpp
 )
 
 set(TEST_MAIN unit_tests)   # Default name for test executable (change if you wish).
 set(TEST_RUNNER_PARAMS "")  # Any arguemnts to feed the test runner (change as needed).
 
-# include_directories(${googletest_SOURCE_DIR}/googletest/include/})
-
+include_directories(${CMAKE_SOURCE_DIR}/src)
 # --------------------------------------------------------------------------------
 #                         Make Tests (no change needed).
 # --------------------------------------------------------------------------------

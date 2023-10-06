@@ -11,6 +11,7 @@
 
 #include "exampleConfig.h"
 // #include "example.h"
+#include <SharedPtr.hpp>
 
 /*
  * Simple main program that demontrates how access

@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 3.27)
 set(TESTFILES        # All .cpp files in tests/
     main.cpp
     test_unique_ptr.cpp
+    test_shared_ptr.cpp
 )
 
 set(TEST_MAIN unit_tests)   # Default name for test executable (change if you wish).

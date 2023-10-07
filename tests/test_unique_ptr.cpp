@@ -46,3 +46,18 @@ TEST(UniquePtr, Reset) {
     ptr.reset();
     EXPECT_EQ(ptr.get(), nullptr);
 }
+
+// swap
+TEST(UniquePtr, Swap) {
+    UniquePtr<int> ptr(new int(5));
+    UniquePtr<int> ptr2(new int(6));
+    ptr.swap(ptr2);
+    EXPECT_EQ(*ptr, 6);
+    EXPECT_EQ(*ptr2, 5);
+}
+
+// make_unique
+TEST(UniquePtr, MakeUnique) {
+    auto ptr = make_unique<int>(5);
+    EXPECT_EQ(*ptr, 5);
+}

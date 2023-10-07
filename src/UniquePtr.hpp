@@ -63,6 +63,11 @@ public:
         m_ptr = ptr;
     }
 
+    // Swap the pointers
+    void swap(UniquePtr& other) {
+        std::swap(m_ptr, other.m_ptr);
+    }
+
 private:
     T* m_ptr;
 };

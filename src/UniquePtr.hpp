@@ -57,7 +57,9 @@ public:
 
     // Reset the pointer
     void reset(T* ptr = nullptr) {
-        delete m_ptr;
+        if (m_ptr != nullptr) {
+            delete m_ptr;
+        }
         m_ptr = ptr;
     }
 

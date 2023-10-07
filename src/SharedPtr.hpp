@@ -85,6 +85,7 @@ public:
         return *this;
     }
 
+    // reset
     void reset(T* ptr = nullptr) {
         if (m_control_block != nullptr) {
             m_control_block->m_strong_count.fetch_sub(1, std::memory_order_relaxed);
@@ -96,10 +97,35 @@ public:
             }
         }
         m_data_ptr = ptr;
-        m_control_block = new ControlBlock;
+        m_control_block = new ControlBlock; // might want to change this to nullptr
     }
 
+    // release
+    T* release() {
+        T* released_ptr = m_data_ptr; // Store the pointer to be released
+        if (m_control_block != nullptr) {
+            m_control_block->m_strong_count.fetch_sub(1);
+            if (m_control_block->m_strong_count == 0) {
+                // If there are no more shared pointers, delete the control block
+                delete m_control_block;
+            }
+        }
+        m_data_ptr = nullptr; // Release ownership
+        m_control_block = nullptr; // Reset the control block
+        return released_ptr;
+    }
+
+    // swap
+    void swap(SharedPtr& other) {
+        std::swap(m_data_ptr, other.m_data_ptr);
+        std::swap(m_control_block, other.m_control_block);
+    }
 private:
     T* m_data_ptr;
     ControlBlock* m_control_block;
 };
+
+template <typename T, typename... Args>
+SharedPtr<T> make_shared(Args&&... args) {
+    return SharedPtr<T>(new T(std::forward<Args>(args)...));
+}

@@ -1,59 +1,48 @@
 #include "gtest/gtest.h"
 #include "UniquePtr.hpp"
 
-// // Test fixture for UniquePtr constructor tests
-// class UniquePtrConstructorTest : public ::testing::Test {
-// protected:
-//     UniquePtrConstructorTest() {
-//         // initialization code here
-//     }
+TEST(UniquePtr, EmptyConstructor) {
+    UniquePtr<int> ptr;
+    EXPECT_EQ(ptr.get(), nullptr);
+}
 
-//     ~UniquePtrConstructorTest() override {
-//         // cleanup code here
-//     }
+TEST(UniquePtr, Constructor) {
+    UniquePtr<int> ptr(new int(5));
+    EXPECT_EQ(*ptr, 5);
+}
 
-//     // define variables used in the tests here
-// };
+// move constructor
+TEST(UniquePtr, MoveConstructor) {
+    UniquePtr<int> ptr(new int(5));
+    UniquePtr<int> ptr2(std::move(ptr));
+    EXPECT_EQ(ptr.get(), nullptr);
+    EXPECT_EQ(*ptr2, 5);
+}
 
-// // Test fixture for UniquePtr method tests
-// class UniquePtrMethodTest : public ::testing::Test {
-// protected:
-//     UniquePtrMethodTest() {
-//         // initialization code here
-//     }
+// move assignment operator
+TEST(UniquePtr, MoveAssignmentOperator) {
+    UniquePtr<int> ptr(new int(5));
+    UniquePtr<int> ptr2;
+    ptr2 = std::move(ptr);
+    EXPECT_EQ(ptr.get(), nullptr);
+    EXPECT_EQ(*ptr2, 5);
+}
 
-//     ~UniquePtrMethodTest() override {
-//         // cleanup code here
-//     }
+// release
+TEST(UniquePtr, Release) {
+    UniquePtr<int> ptr(new int(5));
+    int* rawPtr = ptr.release();
+    EXPECT_EQ(ptr.get(), nullptr);
+    EXPECT_EQ(*rawPtr, 5);
+    delete rawPtr;
+}
 
-//     // define variables used in the tests here
-// };
+// reset
+TEST(UniquePtr, Reset) {
+    UniquePtr<int> ptr(new int(5));
+    ptr.reset(new int(6));
+    EXPECT_EQ(*ptr, 6);
 
-// // Test fixture for UniquePtr operator tests
-// class UniquePtrOperatorTest : public ::testing::Test {
-// protected:
-//     UniquePtrOperatorTest() {
-//         // initialization code here
-//     }
-
-//     ~UniquePtrOperatorTest() override {
-//         // cleanup code here
-//     }
-
-//     // define variables used in the tests here
-// };
-
-// // Test case for UniquePtr constructor
-// TEST_F(UniquePtrConstructorTest, TestConstructor) {
-//     // test code here
-// }
-
-// // Test case for UniquePtr method
-// TEST_F(UniquePtrMethodTest, TestMethod) {
-//     // test code here
-// }
-
-// // Test case for UniquePtr operator
-// TEST_F(UniquePtrOperatorTest, TestOperator) {
-//     // test code here
-// }
+    ptr.reset();
+    EXPECT_EQ(ptr.get(), nullptr);
+}

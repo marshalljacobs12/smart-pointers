@@ -2,6 +2,8 @@
 #include <iostream>
 #include "ControlBlock.hpp"
 
+using namespace std;
+
 template <typename T>
 class SharedPtr {
 public:
@@ -19,8 +21,8 @@ public:
     // destructor
     ~SharedPtr() {
         if (m_control_block) {
-            m_control_block->m_strong_count.fetch_sub(1, std::memory_order_relaxed);
-            if (m_control_block->m_strong_count == 0) {
+            m_control_block->m_strong_count.fetch_sub(1, memory_order_relaxed);
+            if (m_control_block->m_strong_count.load(memory_order_relaxed) == 0) {
                 if (m_data_ptr) {
                     delete m_data_ptr;
                 }
@@ -28,6 +30,7 @@ public:
             }
         }
     }
+    
     // dereference operator
     T& operator*() const {
         return *m_data_ptr;
@@ -37,17 +40,18 @@ public:
     T* operator->() const {
         return m_data_ptr;
     }
+
     // get the number of SharedPtr instances sharing the ownership of the managed object
     unsigned use_count() const {
         if (m_control_block) {
-            return m_control_block->m_strong_count;
+            return m_control_block->m_strong_count.load(memory_order_relaxed);
         }
         return 0;
     }
     // get the number of WeakPtr instances pointing at the current object
     unsigned weak_count() const {
         if (m_control_block) {
-            return m_control_block->m_weak_count;
+            return m_control_block->m_weak_count.load(memory_order_relaxed);
         }
         return 0;
     }
@@ -55,18 +59,20 @@ public:
     // copy constructor
     SharedPtr(const SharedPtr& other) : m_data_ptr(other.m_data_ptr), m_control_block(other.m_control_block) {
         if (m_control_block) {
-            m_control_block->m_strong_count.fetch_add(1, std::memory_order_relaxed);
+            m_control_block->m_strong_count.fetch_add(1, memory_order_relaxed);
         }
     }
+    
     // copy assignment operator
     SharedPtr& operator=(const SharedPtr& other) {
         if (this != &other) {
             m_data_ptr = other.m_data_ptr;
             m_control_block = other.m_control_block;
-            m_control_block->m_strong_count.fetch_add(1, std::memory_order_relaxed);
+            m_control_block->m_strong_count.fetch_add(1, memory_order_relaxed);
         }
         return *this;
     }
+    
     // move constructor
     SharedPtr(SharedPtr&& other) : m_data_ptr(other.m_data_ptr), m_control_block(other.m_control_block) {
         other.m_data_ptr = nullptr;
@@ -87,8 +93,8 @@ public:
     // reset
     void reset(T* ptr = nullptr) {
         if (m_control_block) {
-            m_control_block->m_strong_count.fetch_sub(1, std::memory_order_relaxed);
-            if (m_control_block->m_strong_count == 0) {
+            m_control_block->m_strong_count.fetch_sub(1, memory_order_relaxed);
+            if (m_control_block->m_strong_count.load(memory_order_relaxed) == 0) {
                 delete m_data_ptr;
                 delete m_control_block;
             }
@@ -102,7 +108,7 @@ public:
         T* released_ptr = m_data_ptr; // Store the pointer to be released
         if (m_control_block) {
             m_control_block->m_strong_count.fetch_sub(1);
-            if (m_control_block->m_strong_count == 0) {
+            if (m_control_block->m_strong_count.load(memory_order_relaxed) == 0) {
                 // If there are no more shared pointers, delete the control block
                 delete m_control_block;
             }
@@ -114,9 +120,10 @@ public:
 
     // swap
     void swap(SharedPtr& other) {
-        std::swap(m_data_ptr, other.m_data_ptr);
-        std::swap(m_control_block, other.m_control_block);
+        swap(m_data_ptr, other.m_data_ptr);
+        swap(m_control_block, other.m_control_block);
     }
+
 private:
     T* m_data_ptr;
     ControlBlock* m_control_block;
@@ -124,5 +131,5 @@ private:
 
 template <typename T, typename... Args>
 SharedPtr<T> make_shared(Args&&... args) {
-    return SharedPtr<T>(new T(std::forward<Args>(args)...));
+    return SharedPtr<T>(new T(forward<Args>(args)...));
 }

@@ -11,7 +11,6 @@ TEST(UniquePtr, Constructor) {
     EXPECT_EQ(*ptr, 5);
 }
 
-// move constructor
 TEST(UniquePtr, MoveConstructor) {
     UniquePtr<int> ptr(new int(5));
     UniquePtr<int> ptr2(std::move(ptr));
@@ -19,7 +18,6 @@ TEST(UniquePtr, MoveConstructor) {
     EXPECT_EQ(*ptr2, 5);
 }
 
-// move assignment operator
 TEST(UniquePtr, MoveAssignmentOperator) {
     UniquePtr<int> ptr(new int(5));
     UniquePtr<int> ptr2;
@@ -28,7 +26,6 @@ TEST(UniquePtr, MoveAssignmentOperator) {
     EXPECT_EQ(*ptr2, 5);
 }
 
-// release
 TEST(UniquePtr, Release) {
     UniquePtr<int> ptr(new int(5));
     int* rawPtr = ptr.release();
@@ -37,7 +34,6 @@ TEST(UniquePtr, Release) {
     delete rawPtr;
 }
 
-// reset
 TEST(UniquePtr, Reset) {
     UniquePtr<int> ptr(new int(5));
     ptr.reset(new int(6));
@@ -47,7 +43,6 @@ TEST(UniquePtr, Reset) {
     EXPECT_EQ(ptr.get(), nullptr);
 }
 
-// swap
 TEST(UniquePtr, Swap) {
     UniquePtr<int> ptr(new int(5));
     UniquePtr<int> ptr2(new int(6));
@@ -56,7 +51,6 @@ TEST(UniquePtr, Swap) {
     EXPECT_EQ(*ptr2, 5);
 }
 
-// make_unique
 TEST(UniquePtr, MakeUnique) {
     auto ptr = make_unique<int>(5);
     EXPECT_EQ(*ptr, 5);

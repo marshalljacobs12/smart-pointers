@@ -4,6 +4,8 @@
 
 template <typename T>
 class SharedPtr {
+    template <typename U>
+    friend class WeakPtr;
 public:
     // default constructor
     SharedPtr() : m_data_ptr(nullptr), m_control_block(nullptr) {};
@@ -65,6 +67,7 @@ public:
     // need to account for memory management here
     SharedPtr& operator=(const SharedPtr& other) {
         if (this != &other) {
+            m_control_block->m_strong_count.fetch_sub(1, std::memory_order_relaxed);
             m_data_ptr = other.m_data_ptr;
             m_control_block = other.m_control_block;
             m_control_block->m_strong_count.fetch_add(1, std::memory_order_relaxed);

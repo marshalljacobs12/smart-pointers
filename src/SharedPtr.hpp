@@ -18,15 +18,13 @@ public:
     
     // destructor
     ~SharedPtr() {
-        if (m_control_block != nullptr) {
+        if (m_control_block) {
             m_control_block->m_strong_count.fetch_sub(1, std::memory_order_relaxed);
             if (m_control_block->m_strong_count == 0) {
-                if (m_data_ptr != nullptr) {
+                if (m_data_ptr) {
                     delete m_data_ptr;
                 }
-                if (m_control_block->m_weak_count == 0) {
-                    delete m_control_block;
-                }
+                delete m_control_block;
             }
         }
     }
@@ -41,21 +39,22 @@ public:
     }
     // get the number of SharedPtr instances sharing the ownership of the managed object
     unsigned use_count() const {
-        if (m_control_block == nullptr) {
-            return 0;
+        if (m_control_block) {
+            return m_control_block->m_strong_count;
         }
-        return m_control_block->m_strong_count;
+        return 0;
     }
     // get the number of WeakPtr instances pointing at the current object
     unsigned weak_count() const {
-        if (m_control_block == nullptr) {
-            return 0;
+        if (m_control_block) {
+            return m_control_block->m_weak_count;
         }
-        return m_control_block->m_weak_count;
+        return 0;
     }
+
     // copy constructor
     SharedPtr(const SharedPtr& other) : m_data_ptr(other.m_data_ptr), m_control_block(other.m_control_block) {
-        if (m_control_block != nullptr) {
+        if (m_control_block) {
             m_control_block->m_strong_count.fetch_add(1, std::memory_order_relaxed);
         }
     }
@@ -87,13 +86,11 @@ public:
 
     // reset
     void reset(T* ptr = nullptr) {
-        if (m_control_block != nullptr) {
+        if (m_control_block) {
             m_control_block->m_strong_count.fetch_sub(1, std::memory_order_relaxed);
             if (m_control_block->m_strong_count == 0) {
                 delete m_data_ptr;
-                if (m_control_block->m_weak_count == 0) {
-                    delete m_control_block;
-                }
+                delete m_control_block;
             }
         }
         m_data_ptr = ptr;
@@ -103,7 +100,7 @@ public:
     // release
     T* release() {
         T* released_ptr = m_data_ptr; // Store the pointer to be released
-        if (m_control_block != nullptr) {
+        if (m_control_block) {
             m_control_block->m_strong_count.fetch_sub(1);
             if (m_control_block->m_strong_count == 0) {
                 // If there are no more shared pointers, delete the control block

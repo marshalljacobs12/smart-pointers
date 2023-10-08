@@ -8,6 +8,8 @@ class SharedPtr;
 class ControlBlock {
     template <typename T>
     friend class SharedPtr;
+    template <typename T>
+    friend class WeakPtr;
 public:
     ControlBlock() : m_strong_count(1), m_weak_count(0) {}
 private:

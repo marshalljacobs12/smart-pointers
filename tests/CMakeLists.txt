@@ -30,6 +30,3 @@ add_test(
     # Use some per-module/project prefix so that it is easier to run only tests for this module
     NAME ${LIBRARY_NAME}.${TEST_MAIN}
     COMMAND ${TEST_MAIN} ${TEST_RUNNER_PARAMS})
-
-# Adds a 'coverage' target.
-include(CodeCoverage)

@@ -1,21 +1,120 @@
-#include "ControlBlock.hpp"
-#include "SharedPtr.hpp"
-// Forward declaration of SharedPtr
-// template <typename T>
-// class SharedPtr;
+#pragma once
 
-// Custom WeakPtr class
-template <typename T>
+#include <atomic>
+
+#include "SharedPtr.hpp"
+#include "ControlBlock.hpp"
+
+
+template<typename T>
 class WeakPtr {
 public:
-    WeakPtr() = delete;
+    // default constructor
+    WeakPtr() noexcept : m_data_ptr(nullptr), m_control_block(nullptr) {}
 
-    // Constructor from SharedPtr
-    WeakPtr(const SharedPtr<T>& shared)) {
-        std::cout << "Weak Ptr constructor" << std::endl;
+    // copy constructor
+    WeakPtr(const WeakPtr& other) : m_data_ptr(other.m_data_ptr), m_control_block(other.m_control_block) {
+        if (m_control_block) {
+            m_control_block->m_weak_count.fetch_add(1, std::memory_order_relaxed);
+        }
+    }
+
+    // move constructor
+    WeakPtr(WeakPtr&& other) : m_data_ptr(other.m_data_ptr), m_control_block(other.m_control_block) {
+        other.m_data_ptr = nullptr;
+        other.m_control_block = nullptr;
+    }
+
+    // constructor from SharedPtr
+    WeakPtr(const SharedPtr<T>& ptr) : m_data_ptr(ptr.m_data_ptr), m_control_block(ptr.m_control_block) {
+        if (m_control_block) {
+            m_control_block->m_weak_count.fetch_add(1, std::memory_order_relaxed);
+        }
+    }
+
+    // copy assignment
+    WeakPtr& operator=(const WeakPtr& other) {
+        if (this != &other) {
+            m_data_ptr = other.m_data_ptr;
+            m_control_block = other.m_control_block;
+            if (m_control_block) {
+                m_control_block->m_weak_count.fetch_add(1, std::memory_order_relaxed);
+            }
+        }
+        return *this;
+    }
+
+    // move assignment operator
+    WeakPtr& operator=(WeakPtr&& other) {
+        if (this != &other) {
+            m_data_ptr = other.m_data_ptr;
+            m_control_block = other.m_control_block;
+            other.m_data_ptr = nullptr;
+            other.m_control_block = nullptr;
+        }
+        return *this;
+    }
+
+    // destructor
+    ~WeakPtr() {
+        if (m_control_block) {
+            m_control_block->m_weak_count.fetch_sub(1, std::memory_order_relaxed);
+        }
+    }
+
+    // get strong count
+    unsigned use_count() const {
+        if (m_control_block) {
+            return m_control_block->m_strong_count.load(std::memory_order_relaxed);
+        }
+        return 0;
+    }
+
+    // get weak count
+    unsigned weak_count() const {
+        if (m_control_block) {
+            return m_control_block->m_weak_count.load(std::memory_order_relaxed);
+        }
+        return 0;
+    }
+
+    // lock method
+    SharedPtr<T> lock() const {
+        if (!m_control_block || m_control_block->m_strong_count.load(std::memory_order_relaxed) == 0) {
+            return SharedPtr<T>();
+        }
+        SharedPtr<T> new_shared_ptr;
+        new_shared_ptr.m_data_ptr = m_data_ptr;
+        new_shared_ptr.m_control_block = m_control_block;
+        m_control_block->m_strong_count.fetch_add(1, std::memory_order_relaxed);
+        return new_shared_ptr;
+    }
+
+    // expired method
+    bool expired() const {
+        return m_control_block == nullptr || m_control_block->m_strong_count.load(std::memory_order_relaxed) == 0;
+    }
+
+    // swap method
+    void swap(WeakPtr& other) {
+        std::swap(m_data_ptr, other.m_data_ptr);
+        std::swap(m_control_block, other.m_control_block);
     }
 
 private:
     T* m_data_ptr;
     ControlBlock* m_control_block;
 };
+
+// For default constructor
+template <typename T>
+WeakPtr<T> make_weak() {
+    return WeakPtr<T>();
+}
+
+// For copy constructor, move constructor and shared pointer constructor
+template <typename T, typename U>
+WeakPtr<T> make_weak(U param) {
+    return WeakPtr<T>(std::forward<U>(param));
+}
+

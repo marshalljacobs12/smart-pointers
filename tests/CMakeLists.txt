@@ -5,6 +5,7 @@ set(TESTFILES        # All .cpp files in tests/
     main.cpp
     test_unique_ptr.cpp
     test_shared_ptr.cpp
+    test_weak_ptr.cpp
 )
 
 set(TEST_MAIN unit_tests)   # Default name for test executable (change if you wish).

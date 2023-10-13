@@ -102,7 +102,11 @@ public:
             }
         }
         m_data_ptr = ptr;
-        m_control_block = new ControlBlock; // might want to change this to nullptr
+        if (ptr) {
+            m_control_block = new ControlBlock;
+        } else {
+            m_control_block = nullptr;
+        }
     }
 
     // release
